@@ -1,38 +1,25 @@
 package me.joshmelgar.weatherapp.network
 
-import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
-import retrofit2.http.Header
 import retrofit2.http.Query
 
-private const val CURRENT_WEATHER_URL =
+private const val WEATHER_URL =
     "https://api.openweathermap.org/data/2.5/"
 
-private const val CURRENT_WEATHER_URL_OLD =
-    "https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API key}"
-
-private const val FIVE_DAY_FORECAST_URL =
-    "api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API key}"
-
 private const val GEOCODING_URL =
-    "http://api.openweathermap.org/geo/1.0/direct?q={city name},{state code},{country code}&limit={limit}&appid={API key}"
+    "https://api.openweathermap.org/geo/1.0/"
 
-private val retrofitCurrentWeather = Retrofit.Builder()
+private val retrofitWeather = Retrofit.Builder()
     .addConverterFactory(GsonConverterFactory.create())
-    .baseUrl(CURRENT_WEATHER_URL)
+    .baseUrl(WEATHER_URL)
     .build()
 
-//private val retrofitFiveDayForecast = Retrofit.Builder()
-//    .addConverterFactory(GsonConverterFactory.create())
-//    .baseUrl(FIVE_DAY_FORECAST_URL)
-//    .build()
-//
-//private val retrofitGeocoding = Retrofit.Builder()
-//    .addConverterFactory(GsonConverterFactory.create())
-//    .baseUrl(GEOCODING_URL)
-//    .build()
+private val retrofitGeocoding = Retrofit.Builder()
+    .addConverterFactory(GsonConverterFactory.create())
+    .baseUrl(GEOCODING_URL)
+    .build()
 
 interface WeatherApiService {
 
@@ -40,29 +27,32 @@ interface WeatherApiService {
     suspend fun getWeather(
         @Query("lat") latitude: Double,
         @Query("lon") longitude: Double,
+        @Query("units") units: String,
         @Query("appid") apiKey: String
     ): CurrentWeather
 
+    @GET("reverse")
+    suspend fun getGeocoding(
+        @Query("lat") latitude: Double,
+        @Query("lon") longitude: Double,
+        @Query("limit") callLimit: Int,
+        @Query("appid") apiKey: String
+    ): List<Geocoding>
 
-//    @GET(CURRENT_WEATHER_URL)
-//    suspend fun getCurrentWeather(): List<CurrentWeather>
-
-//    @GET(FIVE_DAY_FORECAST_URL)
-//    suspend fun getFiveDayForecast(): List<CurrentWeather>
-//
-//    @GET(GEOCODING_URL)
-//    suspend fun getGeocoding(): List<Geocoding>
+    @GET("forecast")
+    suspend fun getForecast(
+        @Query("lat") latitude: Double,
+        @Query("lon") longitude: Double,
+        @Query("appid") apiKey: String
+    ): Forecast
 }
 
 //lazy initialization of retrofitService.
 //object for other classes to have access
 object WeatherApi {
-    val retrofitCurrentWeatherService : WeatherApiService by lazy {
-        retrofitCurrentWeather.create(WeatherApiService::class.java) }
+    val retrofitWeatherService : WeatherApiService by lazy {
+        retrofitWeather.create(WeatherApiService::class.java) }
 
-//    val retrofitFiveDayForecastService : WeatherApiService by lazy {
-//        retrofitFiveDayForecast.create(WeatherApiService::class.java) }
-//
-//    val retrofitGeocodingService : WeatherApiService by lazy {
-//        retrofitGeocoding.create(WeatherApiService::class.java) }
+    val retrofitGeocodingService : WeatherApiService by lazy {
+        retrofitGeocoding.create(WeatherApiService::class.java) }
 }

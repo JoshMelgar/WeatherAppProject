@@ -3,6 +3,7 @@ package me.joshmelgar.weatherapp.network
 import com.google.gson.annotations.SerializedName
 
 data class Geocoding(
-    @SerializedName("lat") val latitude: Double,
-    @SerializedName("lon") val longitude: Double
+    @SerializedName("name") val cityName: String,
+    @SerializedName("country") val cityCountry: String,
+    @SerializedName("state") val cityState: String
 )
