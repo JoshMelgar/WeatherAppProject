@@ -43,6 +43,7 @@ interface WeatherApiService {
     suspend fun getForecast(
         @Query("lat") latitude: Double,
         @Query("lon") longitude: Double,
+        @Query("units") units: String,
         @Query("appid") apiKey: String
     ): Forecast
 }
@@ -50,9 +51,11 @@ interface WeatherApiService {
 //lazy initialization of retrofitService.
 //object for other classes to have access
 object WeatherApi {
-    val retrofitWeatherService : WeatherApiService by lazy {
-        retrofitWeather.create(WeatherApiService::class.java) }
+    val retrofitWeatherService: WeatherApiService by lazy {
+        retrofitWeather.create(WeatherApiService::class.java)
+    }
 
-    val retrofitGeocodingService : WeatherApiService by lazy {
-        retrofitGeocoding.create(WeatherApiService::class.java) }
+    val retrofitGeocodingService: WeatherApiService by lazy {
+        retrofitGeocoding.create(WeatherApiService::class.java)
+    }
 }

@@ -2,88 +2,94 @@ package me.joshmelgar.weatherapp.screens
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import me.joshmelgar.weatherapp.BuildConfig
 import android.Manifest
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.shouldShowRationale
+import me.joshmelgar.weatherapp.factories.WeatherViewModelFactory
+import me.joshmelgar.weatherapp.helpers.DateTimeHelper
 import me.joshmelgar.weatherapp.helpers.LocationHelper
 import me.joshmelgar.weatherapp.helpers.WindHelper
-import me.joshmelgar.weatherapp.network.CurrentWeather
-import me.joshmelgar.weatherapp.network.Forecast
-import me.joshmelgar.weatherapp.network.Geocoding
+import me.joshmelgar.weatherapp.network.ForecastItem
 import me.joshmelgar.weatherapp.network.WeatherApi
+import me.joshmelgar.weatherapp.respositories.WeatherRepository
+import me.joshmelgar.weatherapp.viewmodels.WeatherViewModel
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun HomeScreen() {
+fun HomeScreen(navController: NavController, weatherViewModel: WeatherViewModel) {
+   // val weatherApi = WeatherApi.retrofitWeatherService
+    //val viewModel: WeatherViewModel = viewModel(factory = WeatherViewModelFactory(WeatherRepository(weatherApi)))
     val context = LocalContext.current
     val locationPermissionState =
         rememberPermissionState(permission = Manifest.permission.ACCESS_FINE_LOCATION)
-    val viewModel = viewModel<HomeScreenViewModel>()
 
-    Scaffold(
-        bottomBar = {
-            NavigationBar{}
-        }
-    ) { innerPadding ->
+    Scaffold { innerPadding ->
         Surface(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
+                .fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
             when {
                 locationPermissionState.status.isGranted -> {
 
+                    weatherViewModel.updateLocationPermissionStatus(locationPermissionState.status.isGranted)
+
                     LocationHelper.getCurrentLocation(context) { latitude, longitude ->
-                        viewModel.updateLocation(latitude, longitude)
+                        weatherViewModel.updateLocation(latitude, longitude)
                     }
 
-                    when (val state = viewModel.state.collectAsState().value) {
-                        HomeScreenViewModel.State.Loading -> {
+                    when (val state = weatherViewModel.state.collectAsState().value) {
+                        WeatherViewModel.State.Loading -> {
                             Text("Loading...")
                         }
 
-                        is HomeScreenViewModel.State.Data -> {
+                        is WeatherViewModel.State.Data -> {
                             Column(
-                                modifier = Modifier.fillMaxSize()
-                            ){
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(bottom = innerPadding.calculateBottomPadding())
+                                    .fillMaxSize()
+                            ) {
                                 Box(
                                     contentAlignment = Alignment.Center,
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier
+                                        .fillMaxWidth()
                                         .padding(16.dp)
                                 ) {
                                     Column(
                                         horizontalAlignment = Alignment.CenterHorizontally
-                                    ){
+                                    ) {
                                         Text(
                                             text = state.geocodingData[0].cityName,
                                             fontSize = 25.sp,
@@ -100,7 +106,7 @@ fun HomeScreen() {
                                 Row(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     modifier = Modifier.fillMaxWidth()
-                                ){
+                                ) {
                                     Column(
                                         modifier = Modifier.padding(10.dp)
                                     ) {
@@ -122,22 +128,27 @@ fun HomeScreen() {
                                         modifier = Modifier.padding(10.dp)
                                     ) {
                                         Text(
-                                            text = "Feels like ${state.weatherData.main.feelsLike.roundToInt()}"
+                                            text = "Feels like ${state.weatherData.main.feelsLike.roundToInt()}°"
                                         )
 
                                         Text(
-                                            text = "${state.weatherData.main.tempMax.roundToInt()} " +
-                                                    "/ ${state.weatherData.main.tempMin.roundToInt()}"
+                                            text = "${state.weatherData.main.tempMax.roundToInt()}°" +
+                                                    " / ${state.weatherData.main.tempMin.roundToInt()}°"
                                         )
                                     }
                                 }
-                                Text("Weather: ${state.weatherData}")
-                                Text("Location: ${state.geocodingData}")
-                                Text("Forecast: ${state.forecastData}")
+
+                                //Text("Weather: ${state.weatherData}")
+                                //Text("Location: ${state.geocodingData}")
+                                //Text("Forecast: ${state.forecastData.forecastList.size}")
+
+                                ForecastColumn(forecastList = state.forecastData.forecastList)
+
+                                //GreenRectanglesRow(list = state.forecastData.forecastList)
                             }
                         }
 
-                        is HomeScreenViewModel.State.Error -> {
+                        is WeatherViewModel.State.Error -> {
                             Text("Error: ${state.error}")
                         }
                     }
@@ -157,6 +168,7 @@ fun HomeScreen() {
                         }
                     }
                 }
+
                 else -> {
                     Text("Location permission denied")
                 }
@@ -165,31 +177,55 @@ fun HomeScreen() {
     }
 }
 
-class HomeScreenViewModel : ViewModel() {
-    sealed class State {
-        data object Loading : State()
+@Composable
+fun ForecastColumn(forecastList: List<ForecastItem>) {
+    val scrollState = rememberScrollState()
 
-        data class Error(val error: Exception) : State()
-        data class Data(val weatherData: CurrentWeather,
-                        val geocodingData: List<Geocoding>,
-                        val forecastData: Forecast) : State()
-    }
+    Column(modifier = Modifier.verticalScroll(scrollState)) {
+        forecastList.take(9).forEach { item ->
+            Box(
+                modifier = Modifier
+                    .height(58.dp)
+                    .fillMaxWidth()
+                    .padding(3.dp)
+                    .background(Color(0xFF008D75))
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = DateTimeHelper.convertDateString(item.dtText),
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(16.dp)
+                    )
 
-    //initialize initial state as "Loading"
-    private var _state = MutableStateFlow<State>(State.Loading)
-    val state = _state.asStateFlow()
+//                    val weatherIconId = if (item.forecastWeather.isNotEmpty()) {
+//                        item.forecastWeather[0].icon
+//                    } else {
+//                        "default"
+//                    }
 
-    private val apiKey = BuildConfig.API_KEY_WEATHER
+                    val imageUrl = "https://openweathermap.org/img/wn/${item.forecastWeather[0].icon}@2x.png"
 
-    fun updateLocation(latitude: Double, longitude: Double) {
-        viewModelScope.launch {
-            try {
-                val weatherData = WeatherApi.retrofitWeatherService.getWeather(latitude, longitude, "imperial", apiKey)
-                val forecastData = WeatherApi.retrofitWeatherService.getForecast(latitude, longitude, apiKey)
-                val geocodingData = WeatherApi.retrofitGeocodingService.getGeocoding(latitude, longitude, 1, apiKey)
-                _state.value = State.Data(weatherData, geocodingData, forecastData)
-            } catch (e: Exception) {
-                _state.value = State.Error(e)
+                    //val imageResId = WeatherIconHelper.getWeatherIconResourceId(weatherIconId)
+
+                    Row {
+                        Text(
+                            text = "${item.forecastMain.temp.roundToInt()}° F",
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(16.dp)
+                        )
+
+                        Image(
+                            painter = rememberAsyncImagePainter(imageUrl),
+                            contentDescription = "Weather Icon",
+                            modifier = Modifier,
+                            // Add other modifiers as needed
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                }
             }
         }
     }
