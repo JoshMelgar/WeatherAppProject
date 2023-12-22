@@ -14,7 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -30,7 +30,7 @@ fun BottomNavigationBar() {
     }
 
     val navController = rememberNavController()
-    val weatherViewModel: WeatherViewModel = viewModel()
+    val viewModel: WeatherViewModel = hiltViewModel()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -73,14 +73,12 @@ fun BottomNavigationBar() {
         ) {
             composable(Screens.HomeScreen.route) {
                 HomeScreen(
-                    navController = navController,
-                    weatherViewModel = weatherViewModel
+                    weatherViewModel = viewModel
                 )
             }
             composable(Screens.ForecastScreen.route) {
                 ForecastScreen(
-                    navController = navController,
-                    weatherViewModel = weatherViewModel
+                    weatherViewModel = viewModel
                 )
             }
         }

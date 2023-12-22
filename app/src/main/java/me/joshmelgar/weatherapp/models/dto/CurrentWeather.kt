@@ -1,4 +1,4 @@
-package me.joshmelgar.weatherapp.network
+package me.joshmelgar.weatherapp.models.dto
 
 import com.google.gson.annotations.SerializedName
 
