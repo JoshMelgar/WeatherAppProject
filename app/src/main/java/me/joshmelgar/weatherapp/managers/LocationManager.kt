@@ -7,31 +7,39 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 class LocationManager(private val context: Context) {
 
-    var fusedLocationProviderClient: FusedLocationProviderClient =
+    private var fusedLocationProviderClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(context)
 
-    fun getCurrentLocation(onLocationReceived: (latitude: Double, longitude: Double) -> Unit) {
-        if (ContextCompat.checkSelfPermission(
-                context,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            //if user does not accept permission do something
-        } else {
+    suspend fun getCurrentLocation(): Pair<Double, Double> = suspendCancellableCoroutine { continuation ->
+        if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             val cancellationTokenSource = CancellationTokenSource()
 
-            fusedLocationProviderClient.getCurrentLocation(
-                Priority.PRIORITY_HIGH_ACCURACY,
-                cancellationTokenSource.token
-            )
+            // register cancellation activity,
+            continuation.invokeOnCancellation {
+                cancellationTokenSource.cancel()
+            }
+
+            fusedLocationProviderClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cancellationTokenSource.token)
                 .addOnSuccessListener { location ->
-                    if (location != null) {
-                        onLocationReceived(location.latitude, location.longitude)
+                    if (location != null && continuation.isActive) {
+                        continuation.resume(Pair(location.latitude, location.longitude))
+                    } else {
+                        continuation.resumeWithException(Exception("Location was null"))
                     }
                 }
+                .addOnFailureListener { exception ->
+                    if (continuation.isActive) {
+                        continuation.resumeWithException(exception)
+                    }
+                }
+        } else {
+            continuation.resumeWithException(SecurityException("Location was not granted"))
         }
     }
 }
