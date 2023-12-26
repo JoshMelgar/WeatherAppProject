@@ -14,6 +14,7 @@ import me.joshmelgar.weatherapp.respositories.WeatherRepository
 @Module
 @InstallIn(ViewModelComponent::class)
 object HiltModules {
+
     @Provides
     fun provideLocationManager(@ApplicationContext context: Context): LocationManager {
         return LocationManager(context)

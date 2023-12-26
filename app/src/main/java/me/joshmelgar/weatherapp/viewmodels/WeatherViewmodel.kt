@@ -13,19 +13,18 @@ import me.joshmelgar.weatherapp.models.domain.ForecastMainDetails
 import me.joshmelgar.weatherapp.models.domain.LocationInfo
 import me.joshmelgar.weatherapp.models.domain.WeatherDetails
 import me.joshmelgar.weatherapp.respositories.WeatherRepository
-import me.joshmelgar.weatherapp.viewmodels.interfaces.IWeatherViewModel
 import javax.inject.Inject
 
 @HiltViewModel
 class WeatherViewModel @Inject constructor(
     private val repository: WeatherRepository,
     private val locationManager: LocationManager
-) : ViewModel(), IWeatherViewModel {
+) : ViewModel() {
     // Property to hold the permission status
     private val _locationPermissionGranted = MutableStateFlow(false)
-    override val locationPermissionGranted = _locationPermissionGranted.asStateFlow()
+    val locationPermissionGranted = _locationPermissionGranted.asStateFlow()
 
-    override fun updateLocationPermissionStatus(granted: Boolean) {
+    fun updateLocationPermissionStatus(granted: Boolean) {
         _locationPermissionGranted.value = granted
     }
 
@@ -43,7 +42,7 @@ class WeatherViewModel @Inject constructor(
 
     //initialize initial state as "Loading"
     private var _state = MutableStateFlow<State>(State.Loading)
-    override val state = _state.asStateFlow()
+    val state = _state.asStateFlow()
 
     private val apiKey = BuildConfig.API_KEY_WEATHER
 
@@ -72,9 +71,14 @@ class WeatherViewModel @Inject constructor(
         }
     }
 
-    override fun requestCurrentLocation() {
-        locationManager.getCurrentLocation { latitude, longitude ->
-            updateLocation(latitude, longitude)
+    fun updateLocation() {
+        viewModelScope.launch {
+            try {
+                val (latitude, longitude) = locationManager.getCurrentLocation()
+                updateLocation(latitude, longitude)
+            } catch (e: Exception) {
+                _state.value = State.Error(e)
+            }
         }
     }
 }
