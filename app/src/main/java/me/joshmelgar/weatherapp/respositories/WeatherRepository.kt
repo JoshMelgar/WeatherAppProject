@@ -2,13 +2,14 @@ package me.joshmelgar.weatherapp.respositories
 
 import me.joshmelgar.weatherapp.models.domain.ForecastHomeDetails
 import me.joshmelgar.weatherapp.models.domain.ForecastMainDetails
+import me.joshmelgar.weatherapp.respositories.extensions.toForecastMainDetails
+import me.joshmelgar.weatherapp.respositories.extensions.toForecastHomeDetails
+import me.joshmelgar.weatherapp.respositories.extensions.toWeatherDetails
+import me.joshmelgar.weatherapp.respositories.extensions.toLocationInfo
 import me.joshmelgar.weatherapp.models.domain.LocationInfo
 import me.joshmelgar.weatherapp.models.domain.WeatherDetails
-import me.joshmelgar.weatherapp.models.domain.WindInfo
-import me.joshmelgar.weatherapp.models.dto.CurrentWeather
-import me.joshmelgar.weatherapp.models.dto.ForecastItem
-import me.joshmelgar.weatherapp.models.dto.Geocoding
 import me.joshmelgar.weatherapp.network.WeatherApiService
+import me.joshmelgar.weatherapp.utils.Result
 import javax.inject.Inject
 
 class WeatherRepository @Inject constructor(
@@ -20,11 +21,14 @@ class WeatherRepository @Inject constructor(
         longitude: Double,
         callLimit: Int,
         apiKey: String
-    ): LocationInfo {
-        val geocodingResults =
-            weatherApiService.getGeocoding(latitude, longitude, callLimit, apiKey)
-        // take first from list for simplicity (change later?)
-        return geocodingResults.first().toLocationInfo()
+    ): Result<LocationInfo> {
+        return try {
+            val geocodingResults = weatherApiService.getGeocoding(latitude, longitude, callLimit, apiKey)
+            val locationInfo = geocodingResults.first().toLocationInfo()
+            Result.Success(locationInfo)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
     }
 
     suspend fun getWeather(
@@ -32,9 +36,13 @@ class WeatherRepository @Inject constructor(
         longitude: Double,
         units: String,
         apiKey: String
-    ): WeatherDetails {
-        val currentWeatherDto = weatherApiService.getWeather(latitude, longitude, units, apiKey)
-        return currentWeatherDto.toWeatherDetails()
+    ): Result<WeatherDetails> {
+        return try {
+            val currentWeatherDto = weatherApiService.getWeather(latitude, longitude, units, apiKey)
+            Result.Success(currentWeatherDto.toWeatherDetails())
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
     }
 
     suspend fun getForecastHomeScreenWeatherList(
@@ -42,9 +50,14 @@ class WeatherRepository @Inject constructor(
         longitude: Double,
         units: String,
         apiKey: String
-    ): List<ForecastHomeDetails> {
-        val forecastDto = weatherApiService.getForecast(latitude, longitude, units, apiKey)
-        return forecastDto.forecastList.map { it.toForecastHomeDetails() }
+    ): Result<List<ForecastHomeDetails>> {
+        return try {
+            val forecastDto = weatherApiService.getForecast(latitude, longitude, units, apiKey)
+            val forecastDetails = forecastDto.forecastList.map { it.toForecastHomeDetails() }
+            Result.Success(forecastDetails)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
     }
 
     suspend fun getForecastScreenWeatherList(
@@ -52,51 +65,13 @@ class WeatherRepository @Inject constructor(
         longitude: Double,
         units: String,
         apiKey: String
-    ): List<ForecastMainDetails> {
-        val forecastDto = weatherApiService.getForecast(latitude, longitude, units, apiKey)
-        return forecastDto.forecastList.map { it.toForecastMainDetails() }
-    }
-
-    private fun CurrentWeather.toWeatherDetails(): WeatherDetails {
-        return WeatherDetails(
-            temperature = this.main.temp,
-            feelsLike = this.main.feelsLike,
-            lowTemp = this.main.tempMin,
-            highTemp = this.main.tempMax,
-            wind = WindInfo(speed = this.wind.speed, degree = this.wind.degree)
-        )
-    }
-
-    private fun Geocoding.toLocationInfo(): LocationInfo {
-        return LocationInfo(
-            cityName = this.cityName,
-            cityState = this.cityState,
-            cityCountry = this.cityCountry
-        )
-    }
-
-    private fun ForecastItem.toForecastHomeDetails(): ForecastHomeDetails {
-        val weather =
-            this.forecastWeather.firstOrNull() ?: throw Exception("Forecast weather list is empty")
-        return ForecastHomeDetails(
-            weatherType = weather.weatherType,
-            description = weather.description,
-            icon = weather.icon,
-            temperature = this.forecastMain.temp,
-            date = this.dtText
-        )
-    }
-
-    private fun ForecastItem.toForecastMainDetails(): ForecastMainDetails {
-        val weather =
-            this.forecastWeather.firstOrNull() ?: throw Exception("Forecast weather list is empty")
-        return ForecastMainDetails(
-            date = this.dtText,
-            highTemp = this.forecastMain.tempMax,
-            lowTemp = this.forecastMain.tempMin,
-            icon = weather.icon,
-            weatherType = weather.description,
-            wind = WindInfo(this.wind.speed, this.wind.deg)
-        )
+    ): Result<List<ForecastMainDetails>> {
+        return try {
+            val forecastDto = weatherApiService.getForecast(latitude, longitude, units, apiKey)
+            val forecastDetails = forecastDto.forecastList.map { it.toForecastMainDetails() }
+            Result.Success(forecastDetails)
+        } catch (e: Exception){
+            Result.Error(e)
+        }
     }
 }

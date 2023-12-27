@@ -4,7 +4,7 @@ data class ForecastMainDetails (
     val date: String,
     val highTemp: Double,
     val lowTemp: Double,
-    val icon: String,
+    val iconImageUrl: String,
     val weatherType: String,
     val wind: WindInfo
 )
