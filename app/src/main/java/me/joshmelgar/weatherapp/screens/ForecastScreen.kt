@@ -142,13 +142,11 @@ fun FiveDayForecastColumn(forecastList: List<ForecastMainDetails>) {
                         )
                     }
 
-                    val imageUrl = "https://openweathermap.org/img/wn/${dailyForecast.icon}@2x.png"
-
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Image(
-                            painter = rememberAsyncImagePainter(imageUrl),
+                            painter = rememberAsyncImagePainter(dailyForecast.iconImageUrl),
                             contentDescription = "Weather Icon",
                             modifier = Modifier.size(48.dp)
                         )
@@ -161,9 +159,6 @@ fun FiveDayForecastColumn(forecastList: List<ForecastMainDetails>) {
                 }
             }
         }
-
-        //look into using the weatherdetails domain model. it is missing icondesc
-        //icon, and something else maybe but look into it. One more domain
     }
 }
 
@@ -181,7 +176,7 @@ fun processForecastData(forecastList: List<ForecastMainDetails>): List<DailyFore
         val avgHighTemp = forecasts.maxOf { it.highTemp }
         val avgLowTemp = forecasts.minOf { it.lowTemp }
         val avgWindSpeed = forecasts.map { it.wind.speed }.average()
-        val mostCommonIcon = forecasts.groupBy { it.icon }
+        val mostCommonIcon = forecasts.groupBy { it.iconImageUrl }
             .maxByOrNull { (_, items) -> items.size }?.key ?: "no icon?"
         val mostCommonIconDesc = forecasts.groupBy { it.weatherType }
             .maxByOrNull { (_, items) -> items.size }?.key ?: "no desc?"
@@ -294,7 +289,7 @@ fun ForecastScreenPreviewDataState() {
                         date = "2023-07-21 12:00:00",
                         highTemp = 100.6,
                         lowTemp = 95.2,
-                        icon = "01d",
+                        iconImageUrl = "https://openweathermap.org/img/wn/01d@2x.png",
                         weatherType = "Sunny",
                         wind = WindInfo(speed = 9.4, degree = 3)
                     ),
@@ -315,7 +310,7 @@ fun FiveDayForecastColumnPreview() {
             date = "12-12-1992 00:00:00",
             highTemp = 80.4,
             lowTemp = 10.2,
-            icon = "04n",
+            iconImageUrl = "https://openweathermap.org/img/wn/01d@2x.png",
             weatherType = "snow",
             wind = WindInfo(10.4, 4)
         )

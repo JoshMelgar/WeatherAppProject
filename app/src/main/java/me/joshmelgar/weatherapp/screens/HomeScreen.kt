@@ -126,8 +126,6 @@ fun ForecastColumn(forecastList: List<ForecastHomeDetails>) {
                         modifier = Modifier.padding(16.dp)
                     )
 
-                    val imageUrl = "https://openweathermap.org/img/wn/${item.icon}@2x.png"
-
                     Row {
                         Text(
                             text = "${item.temperature.roundToInt()}° F",
@@ -136,7 +134,7 @@ fun ForecastColumn(forecastList: List<ForecastHomeDetails>) {
                         )
 
                         Image(
-                            painter = rememberAsyncImagePainter(imageUrl),
+                            painter = rememberAsyncImagePainter(item.iconImageUrl),
                             contentDescription = "Weather Icon",
                             modifier = Modifier,
                             // Add other modifiers as needed
@@ -149,6 +147,7 @@ fun ForecastColumn(forecastList: List<ForecastHomeDetails>) {
     }
 }
 
+//cant seem to move this anywhere unless I pass viewmodel down to previews
 fun convertDateString(input: String): String {
     val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
     val outputFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
@@ -297,7 +296,7 @@ fun HomeScreenPreviewDataState() {
                     ForecastHomeDetails(
                         weatherType = "Sunny",
                         description = "Clear sky",
-                        icon = "01d",
+                        iconImageUrl = "https://openweathermap.org/img/wn/01d@2x.png",
                         temperature = 75.0,
                         date = "2023-07-21 12:00:00"
                     ),
@@ -317,7 +316,7 @@ fun ForecastColumnPreview() {
         ForecastHomeDetails(
             weatherType = "sun is out",
             description = "very sunny",
-            icon = "04n",
+            iconImageUrl = "https://openweathermap.org/img/wn/04n@2x.png",
             temperature = 88.3,
             date = "12-12-1992 00:00:00"
         )
