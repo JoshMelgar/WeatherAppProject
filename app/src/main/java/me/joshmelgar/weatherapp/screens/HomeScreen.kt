@@ -66,7 +66,15 @@ fun HomeScreen(weatherViewModel: WeatherViewModel) {
                     weatherViewModel.updateLocation()
 
                     val uiState = when (state) {
-                        is WeatherViewModel.State.Loading -> ViewModelState(isLoading = true, null, null, null, null, null)
+                        is WeatherViewModel.State.Loading -> ViewModelState(
+                            isLoading = true,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null
+                        )
+
                         is WeatherViewModel.State.Data -> ViewModelState(
                             isLoading = false,
                             state.locationInfo,
@@ -75,7 +83,15 @@ fun HomeScreen(weatherViewModel: WeatherViewModel) {
                             null,
                             null
                         )
-                        is WeatherViewModel.State.Error -> ViewModelState(isLoading = false, null, null, null, null, state.error)
+
+                        is WeatherViewModel.State.Error -> ViewModelState(
+                            isLoading = false,
+                            null,
+                            null,
+                            null,
+                            null,
+                            state.error
+                        )
                     }
                     HomeScreenWrapper(uiState, innerPadding)
                 }
@@ -169,12 +185,14 @@ fun HomeScreenWrapper(state: ViewModelState, innerPadding: PaddingValues) {
                     CircularProgressIndicator()
                 }
             }
+
             state.error != null -> {
                 // Display an error message
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                     Text("Error: ${state.error.message}", color = Color.Red)
                 }
             }
+
             else -> {
                 Column(
                     modifier = Modifier
@@ -267,7 +285,14 @@ fun HomeScreenPreviewLoading() {
 fun HomeScreenPreviewError() {
     Scaffold { innerPadding ->
         HomeScreenWrapper(
-            state = ViewModelState(isLoading = false, null, null, null, null, Exception("Mock Error")),
+            state = ViewModelState(
+                isLoading = false,
+                null,
+                null,
+                null,
+                null,
+                Exception("Mock Error")
+            ),
             innerPadding = PaddingValues(all = 16.dp)
         )
     }
@@ -300,10 +325,10 @@ fun HomeScreenPreviewDataState() {
                         temperature = 75.0,
                         date = "2023-07-21 12:00:00"
                     ),
-            ),
+                ),
                 forecastScreenDetails = null,
                 error = null,
-        ),
+            ),
             innerPadding = PaddingValues(all = 16.dp)
         )
     }
