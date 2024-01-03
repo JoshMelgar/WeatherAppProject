@@ -13,6 +13,7 @@ import me.joshmelgar.weatherapp.models.domain.ForecastMainDetails
 import me.joshmelgar.weatherapp.models.domain.LocationInfo
 import me.joshmelgar.weatherapp.models.domain.WeatherDetails
 import me.joshmelgar.weatherapp.respositories.WeatherRepository
+import me.joshmelgar.weatherapp.utils.Result
 import javax.inject.Inject
 
 @HiltViewModel
@@ -46,25 +47,33 @@ class WeatherViewModel @Inject constructor(
 
     private val apiKey = BuildConfig.API_KEY_WEATHER
 
-    private fun updateLocation(latitude: Double, longitude: Double) {
+    fun updateLocation(latitude: Double, longitude: Double) {
         viewModelScope.launch {
             try {
-                val weatherDetails = repository.getWeather(latitude, longitude, "imperial", apiKey)
-                val locationInfo = repository.getGeocoding(latitude, longitude, 1, apiKey)
-                val forecastHomeScreenDetails = repository.getForecastHomeScreenWeatherList(
-                    latitude,
-                    longitude,
-                    "imperial",
-                    apiKey
-                )
-                val forecastScreenDetails =
-                    repository.getForecastScreenWeatherList(latitude, longitude, "imperial", apiKey)
-                _state.value = State.Data(
-                    locationInfo,
-                    weatherDetails,
-                    forecastHomeScreenDetails,
-                    forecastScreenDetails
-                )
+                val locationResult = repository.getGeocoding(latitude, longitude, 1, apiKey)
+                val weatherResult = repository.getWeather(latitude, longitude, "imperial", apiKey)
+                val forecastHomeResult = repository.getForecastHomeScreenWeatherList(latitude, longitude, "imperial", apiKey)
+                val forecastDetailResult = repository.getForecastScreenWeatherList(latitude, longitude, "imperial", apiKey)
+
+                // if all checks are successful
+                if (locationResult is Result.Success && weatherResult is Result.Success &&
+                    forecastHomeResult is Result.Success && forecastDetailResult is Result.Success) {
+
+                    _state.value = State.Data(
+                        locationInfo = locationResult.data,
+                        weatherDetails = weatherResult.data,
+                        forecastHomeScreenDetails = forecastHomeResult.data,
+                        forecastScreenDetails = forecastDetailResult.data
+                    )
+                } else {
+                    //if there are any errors
+                    val exception = (locationResult as? Result.Error)?.exception
+                        ?: (weatherResult as? Result.Error)?.exception
+                        ?: (forecastHomeResult as? Result.Error)?.exception
+                        ?: (forecastDetailResult as? Result.Error)?.exception
+                        ?: Exception("Unknown error occurred")
+                    _state.value = State.Error(exception)
+                }
             } catch (e: Exception) {
                 _state.value = State.Error(e)
             }

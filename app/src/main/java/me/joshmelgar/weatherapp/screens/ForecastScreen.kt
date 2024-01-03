@@ -57,7 +57,15 @@ fun ForecastScreen(weatherViewModel: WeatherViewModel) {
                     weatherViewModel.updateLocation()
 
                     val uiState = when (state) {
-                        is WeatherViewModel.State.Loading -> ViewModelState(isLoading = true, null, null, null, null, null)
+                        is WeatherViewModel.State.Loading -> ViewModelState(
+                            isLoading = true,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null
+                        )
+
                         is WeatherViewModel.State.Data -> ViewModelState(
                             isLoading = false,
                             state.locationInfo,
@@ -66,7 +74,15 @@ fun ForecastScreen(weatherViewModel: WeatherViewModel) {
                             state.forecastScreenDetails,
                             null
                         )
-                        is WeatherViewModel.State.Error -> ViewModelState(isLoading = false, null, null, null, null, state.error)
+
+                        is WeatherViewModel.State.Error -> ViewModelState(
+                            isLoading = false,
+                            null,
+                            null,
+                            null,
+                            null,
+                            state.error
+                        )
                     }
                     ForecastScreenWrapper(state = uiState, innerPadding = innerPadding)
                 }
@@ -219,12 +235,14 @@ fun ForecastScreenWrapper(state: ViewModelState, innerPadding: PaddingValues) {
                     CircularProgressIndicator()
                 }
             }
+
             state.error != null -> {
                 // Display an error message
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                     Text("Error: ${state.error.message}", color = Color.Red)
                 }
             }
+
             else -> {
                 Box(
                     modifier = Modifier
@@ -259,7 +277,14 @@ fun ForecastScreenPreviewLoading() {
 fun ForecastScreenPreviewError() {
     Scaffold { innerPadding ->
         ForecastScreenWrapper(
-            state = ViewModelState(isLoading = false, null, null, null, null, Exception("Mock Error")),
+            state = ViewModelState(
+                isLoading = false,
+                null,
+                null,
+                null,
+                null,
+                Exception("Mock Error")
+            ),
             innerPadding = PaddingValues(all = 16.dp)
         )
     }

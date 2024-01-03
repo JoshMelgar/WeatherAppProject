@@ -23,7 +23,8 @@ class WeatherRepository @Inject constructor(
         apiKey: String
     ): Result<LocationInfo> {
         return try {
-            val geocodingResults = weatherApiService.getGeocoding(latitude, longitude, callLimit, apiKey)
+            val geocodingResults =
+                weatherApiService.getGeocoding(latitude, longitude, callLimit, apiKey)
             val locationInfo = geocodingResults.first().toLocationInfo()
             Result.Success(locationInfo)
         } catch (e: Exception) {
@@ -70,7 +71,7 @@ class WeatherRepository @Inject constructor(
             val forecastDto = weatherApiService.getForecast(latitude, longitude, units, apiKey)
             val forecastDetails = forecastDto.forecastList.map { it.toForecastMainDetails() }
             Result.Success(forecastDetails)
-        } catch (e: Exception){
+        } catch (e: Exception) {
             Result.Error(e)
         }
     }

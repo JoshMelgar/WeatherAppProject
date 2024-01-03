@@ -1,6 +1,6 @@
 package me.joshmelgar.weatherapp.models.domain
 
-data class ForecastHomeDetails (
+data class ForecastHomeDetails(
     val weatherType: String,
     val description: String,
     val iconImageUrl: String,
