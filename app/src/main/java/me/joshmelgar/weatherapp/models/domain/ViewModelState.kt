@@ -6,5 +6,6 @@ data class ViewModelState(
     val weatherDetails: WeatherDetails?,
     val forecastHomeScreenDetails: List<ForecastHomeDetails>?,
     val forecastScreenDetails: List<ForecastMainDetails>?,
+    val dailyForecast: List<DailyForecast>?,
     val error: Exception?
 )

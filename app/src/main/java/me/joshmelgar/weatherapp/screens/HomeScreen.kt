@@ -42,9 +42,6 @@ import me.joshmelgar.weatherapp.models.domain.LocationInfo
 import me.joshmelgar.weatherapp.models.domain.WeatherDetails
 import me.joshmelgar.weatherapp.models.domain.WindInfo
 import me.joshmelgar.weatherapp.viewmodels.WeatherViewModel
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -72,6 +69,7 @@ fun HomeScreen(weatherViewModel: WeatherViewModel) {
                             null,
                             null,
                             null,
+                            null,
                             null
                         )
 
@@ -81,11 +79,13 @@ fun HomeScreen(weatherViewModel: WeatherViewModel) {
                             state.weatherDetails,
                             state.forecastHomeScreenDetails,
                             null,
+                            null,
                             null
                         )
 
                         is WeatherViewModel.State.Error -> ViewModelState(
                             isLoading = false,
+                            null,
                             null,
                             null,
                             null,
@@ -137,7 +137,7 @@ fun ForecastColumn(forecastList: List<ForecastHomeDetails>) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = convertDateString(item.date),
+                        text = item.date,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(16.dp)
                     )
@@ -161,15 +161,6 @@ fun ForecastColumn(forecastList: List<ForecastHomeDetails>) {
             }
         }
     }
-}
-
-//cant seem to move this anywhere unless I pass viewmodel down to previews
-fun convertDateString(input: String): String {
-    val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-    val outputFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
-
-    val date = inputFormat.parse(input)
-    return outputFormat.format(date as Date)
 }
 
 @Composable
@@ -274,7 +265,7 @@ fun HomeScreenWrapper(state: ViewModelState, innerPadding: PaddingValues) {
 fun HomeScreenPreviewLoading() {
     Scaffold { innerPadding ->
         HomeScreenWrapper(
-            state = ViewModelState(isLoading = true, null, null, null, null, null),
+            state = ViewModelState(isLoading = true, null, null, null, null, null, null),
             innerPadding = PaddingValues(all = 16.dp)
         )
     }
@@ -287,6 +278,7 @@ fun HomeScreenPreviewError() {
         HomeScreenWrapper(
             state = ViewModelState(
                 isLoading = false,
+                null,
                 null,
                 null,
                 null,
@@ -327,6 +319,7 @@ fun HomeScreenPreviewDataState() {
                     ),
                 ),
                 forecastScreenDetails = null,
+                dailyForecast = null,
                 error = null,
             ),
             innerPadding = PaddingValues(all = 16.dp)

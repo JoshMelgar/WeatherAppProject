@@ -1,7 +1,7 @@
 package me.joshmelgar.weatherapp.models.domain
 
 data class ForecastMainDetails(
-    val date: String,
+    var date: String,
     val highTemp: Double,
     val lowTemp: Double,
     val iconImageUrl: String,
