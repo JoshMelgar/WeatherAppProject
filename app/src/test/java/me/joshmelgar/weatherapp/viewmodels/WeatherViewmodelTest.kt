@@ -3,16 +3,19 @@ package me.joshmelgar.weatherapp.viewmodels
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import me.joshmelgar.weatherapp.BuildConfig
 import me.joshmelgar.weatherapp.managers.LocationManager
 import me.joshmelgar.weatherapp.models.domain.ForecastHomeDetails
 import me.joshmelgar.weatherapp.models.domain.ForecastMainDetails
+import me.joshmelgar.weatherapp.models.domain.LocationInfo
 import me.joshmelgar.weatherapp.models.domain.WeatherDetails
 import me.joshmelgar.weatherapp.respositories.WeatherRepository
 import me.joshmelgar.weatherapp.utils.Result
@@ -27,8 +30,7 @@ class WeatherViewmodelTest {
     @get:Rule
     val instantExecutorRule = InstantTaskExecutorRule()
 
-    //replace the default dispatcher with a TestCoroutineDispatcher
-    private val testDispatcher = TestCoroutineDispatcher()
+    private val testDispatcher = UnconfinedTestDispatcher()
 
     //mock dependencies
     private lateinit var mockRepository: WeatherRepository
@@ -37,9 +39,10 @@ class WeatherViewmodelTest {
     //subject under test
     private lateinit var weatherViewModel: WeatherViewModel
 
+    private val apiKey = BuildConfig.API_KEY_WEATHER
+
     @Before
     fun setup() {
-        // Initialize mocks
         mockRepository = mockk()
         mockLocationManager = mockk()
 
@@ -53,8 +56,6 @@ class WeatherViewmodelTest {
     fun tearDown() {
         // reset the main dispatcher to the original Main dispatcher
         Dispatchers.resetMain()
-        // clean up the TestCoroutineDispatcher resources
-        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test
@@ -72,13 +73,22 @@ class WeatherViewmodelTest {
     @Test
     fun `update location with successful data loading updates state to Data`() = runTest {
         // GIVEN successful responses from all repository calls
-        coEvery { mockRepository.getGeocoding(any(), any(), any(), any()) } returns Result.Success(mockk())
-        coEvery { mockRepository.getWeather(any(), any(), any(), any()) } returns Result.Success(mockk())
-        coEvery { mockRepository.getForecastHomeScreenWeatherList(any(), any(), any(), any()) } returns Result.Success(mockk())
-        coEvery { mockRepository.getForecastScreenWeatherList(any(), any(), any(), any()) } returns Result.Success(mockk())
+        val latitude = 37.4219983
+        val longitude = -122.084
+        coEvery { mockRepository.getGeocoding(eq(latitude), eq(longitude), eq(1), eq(apiKey)) } returns Result.Success(mockk<LocationInfo>())
+        coEvery { mockRepository.getWeather(eq(latitude), eq(longitude), eq("imperial"), eq(apiKey)) } returns Result.Success(mockk<WeatherDetails>())
+
+        //conversion is done in the viewModel
+        val mockForecastHomeDetails = mockk<ForecastHomeDetails>(relaxed = true)
+        every { mockForecastHomeDetails.date } returns "2023-01-03 00:00:00"
+        coEvery { mockRepository.getForecastHomeScreenWeatherList(eq(latitude), eq(longitude), eq("imperial"), eq(apiKey)) } returns Result.Success(listOf(mockForecastHomeDetails))
+
+        val mockForecastMainDetails = mockk<ForecastMainDetails>(relaxed = true)
+        every { mockForecastMainDetails.date } returns "2023-01-03 00:00:00"
+        coEvery { mockRepository.getForecastScreenWeatherList(eq(latitude), eq(longitude), eq("imperial"), eq(apiKey)) } returns Result.Success(listOf(mockForecastMainDetails))
 
         // WHEN updateLocation is called with some latitude and longitude
-        weatherViewModel.updateLocation(1.0, 1.0)
+        weatherViewModel.updateLocation(latitude, longitude)
 
         // THEN the state should be updated to State.Data
         assertThat(weatherViewModel.state.value).isInstanceOf(WeatherViewModel.State.Data::class.java)

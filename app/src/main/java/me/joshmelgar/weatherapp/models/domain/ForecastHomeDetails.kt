@@ -5,5 +5,5 @@ data class ForecastHomeDetails(
     val description: String,
     val iconImageUrl: String,
     val temperature: Double,
-    val date: String
+    var date: String
 )

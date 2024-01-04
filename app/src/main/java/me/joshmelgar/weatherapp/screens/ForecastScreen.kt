@@ -37,8 +37,6 @@ import me.joshmelgar.weatherapp.models.domain.LocationInfo
 import me.joshmelgar.weatherapp.models.domain.ViewModelState
 import me.joshmelgar.weatherapp.models.domain.WeatherDetails
 import me.joshmelgar.weatherapp.viewmodels.WeatherViewModel
-import java.text.SimpleDateFormat
-import java.util.Locale
 import kotlin.math.roundToInt
 
 @Composable
@@ -63,6 +61,7 @@ fun ForecastScreen(weatherViewModel: WeatherViewModel) {
                             null,
                             null,
                             null,
+                            null,
                             null
                         )
 
@@ -72,11 +71,13 @@ fun ForecastScreen(weatherViewModel: WeatherViewModel) {
                             state.weatherDetails,
                             null,
                             state.forecastScreenDetails,
+                            state.dailyForecast,
                             null
                         )
 
                         is WeatherViewModel.State.Error -> ViewModelState(
                             isLoading = false,
+                            null,
                             null,
                             null,
                             null,
@@ -92,9 +93,8 @@ fun ForecastScreen(weatherViewModel: WeatherViewModel) {
 }
 
 @Composable
-fun FiveDayForecastColumn(forecastList: List<ForecastMainDetails>) {
+fun FiveDayForecastColumn(dailyForecasts: List<DailyForecast>) {
     val scrollState = rememberScrollState()
-    val dailyForecasts = processForecastData(forecastList)
 
     Column(modifier = Modifier.verticalScroll(scrollState)) {
         dailyForecasts.forEach { dailyForecast ->
@@ -178,50 +178,6 @@ fun FiveDayForecastColumn(forecastList: List<ForecastMainDetails>) {
     }
 }
 
-fun processForecastData(forecastList: List<ForecastMainDetails>): List<DailyForecast> {
-    val dailyForecasts = mutableMapOf<String, MutableList<ForecastMainDetails>>()
-
-    //groups s the forecast items by day
-    forecastList.forEach { forecastItem ->
-        val dayKey = getDayOfWeekName(forecastItem.date) ?: ""
-        dailyForecasts.getOrPut(dayKey) { mutableListOf() }.add(forecastItem)
-    }
-
-    // Calculate averages and most common icon for each day
-    val dailyForecastData = dailyForecasts.map { (day, forecasts) ->
-        val avgHighTemp = forecasts.maxOf { it.highTemp }
-        val avgLowTemp = forecasts.minOf { it.lowTemp }
-        val avgWindSpeed = forecasts.map { it.wind.speed }.average()
-        val mostCommonIcon = forecasts.groupBy { it.iconImageUrl }
-            .maxByOrNull { (_, items) -> items.size }?.key ?: "no icon?"
-        val mostCommonIconDesc = forecasts.groupBy { it.weatherType }
-            .maxByOrNull { (_, items) -> items.size }?.key ?: "no desc?"
-        val avgWindDeg = forecasts.map { it.wind.degree }.average()
-
-        DailyForecast(
-            day, avgHighTemp, avgLowTemp,
-            mostCommonIcon, mostCommonIconDesc,
-            WindInfo(avgWindSpeed, avgWindDeg.roundToInt())
-        )
-    }
-
-    //return only the first 5 days
-    return dailyForecastData.take(5)
-}
-
-fun getDayOfWeekName(input: String): String? {
-    val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-    val outputFormat = SimpleDateFormat("EEEE, MMMM dd", Locale.getDefault())
-
-    return try {
-        val date = inputFormat.parse(input)
-        date?.let { outputFormat.format(it) }
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
-    }
-}
-
 @Composable
 fun ForecastScreenWrapper(state: ViewModelState, innerPadding: PaddingValues) {
     Surface(
@@ -250,7 +206,7 @@ fun ForecastScreenWrapper(state: ViewModelState, innerPadding: PaddingValues) {
                         .padding(bottom = innerPadding.calculateBottomPadding())
                         .fillMaxSize()
                 ) {
-                    state.forecastScreenDetails?.let { FiveDayForecastColumn(forecastList = it) }
+                    state.dailyForecast?.let { FiveDayForecastColumn(dailyForecasts = it) }
                 }
             }
         }
@@ -266,7 +222,7 @@ fun ForecastScreenWrapper(state: ViewModelState, innerPadding: PaddingValues) {
 fun ForecastScreenPreviewLoading() {
     Scaffold { innerPadding ->
         ForecastScreenWrapper(
-            state = ViewModelState(isLoading = true, null, null, null, null, null),
+            state = ViewModelState(isLoading = true, null, null, null, null, null, null),
             innerPadding = PaddingValues(all = 16.dp)
         )
     }
@@ -279,6 +235,7 @@ fun ForecastScreenPreviewError() {
         ForecastScreenWrapper(
             state = ViewModelState(
                 isLoading = false,
+                null,
                 null,
                 null,
                 null,
@@ -320,6 +277,7 @@ fun ForecastScreenPreviewDataState() {
                     ),
                 ),
                 forecastHomeScreenDetails = null,
+                dailyForecast = null,
                 error = null,
             ),
             innerPadding = PaddingValues(all = 16.dp)
@@ -331,15 +289,15 @@ fun ForecastScreenPreviewDataState() {
 @Composable
 fun FiveDayForecastColumnPreview() {
     val sampleForecastList = listOf(
-        ForecastMainDetails(
-            date = "12-12-1992 00:00:00",
+        DailyForecast(
+            day = "Monday",
             highTemp = 80.4,
             lowTemp = 10.2,
             iconImageUrl = "https://openweathermap.org/img/wn/01d@2x.png",
-            weatherType = "snow",
+            iconDesc = "snow",
             wind = WindInfo(10.4, 4)
         )
     )
 
-    FiveDayForecastColumn(forecastList = sampleForecastList)
+    FiveDayForecastColumn(dailyForecasts = sampleForecastList)
 }

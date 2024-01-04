@@ -8,13 +8,19 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import me.joshmelgar.weatherapp.BuildConfig
 import me.joshmelgar.weatherapp.managers.LocationManager
+import me.joshmelgar.weatherapp.models.domain.DailyForecast
 import me.joshmelgar.weatherapp.models.domain.ForecastHomeDetails
 import me.joshmelgar.weatherapp.models.domain.ForecastMainDetails
 import me.joshmelgar.weatherapp.models.domain.LocationInfo
 import me.joshmelgar.weatherapp.models.domain.WeatherDetails
+import me.joshmelgar.weatherapp.models.domain.WindInfo
 import me.joshmelgar.weatherapp.respositories.WeatherRepository
 import me.joshmelgar.weatherapp.utils.Result
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
+import kotlin.math.roundToInt
 
 @HiltViewModel
 class WeatherViewModel @Inject constructor(
@@ -37,7 +43,8 @@ class WeatherViewModel @Inject constructor(
             val locationInfo: LocationInfo,
             val weatherDetails: WeatherDetails,
             val forecastHomeScreenDetails: List<ForecastHomeDetails>,
-            val forecastScreenDetails: List<ForecastMainDetails>
+            val forecastScreenDetails: List<ForecastMainDetails>,
+            val dailyForecast: List<DailyForecast>
         ) : State()
     }
 
@@ -62,8 +69,9 @@ class WeatherViewModel @Inject constructor(
                     _state.value = State.Data(
                         locationInfo = locationResult.data,
                         weatherDetails = weatherResult.data,
-                        forecastHomeScreenDetails = forecastHomeResult.data,
-                        forecastScreenDetails = forecastDetailResult.data
+                        forecastHomeScreenDetails = convertDateString(forecastHomeResult.data),
+                        forecastScreenDetails = forecastDetailResult.data,
+                        dailyForecast = processForecastData(forecastDetailResult.data)
                     )
                 } else {
                     //if there are any errors
@@ -89,5 +97,63 @@ class WeatherViewModel @Inject constructor(
                 _state.value = State.Error(e)
             }
         }
+    }
+
+    private fun getDayOfWeekName(input: String): String? {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val outputFormat = SimpleDateFormat("EEEE, MMMM dd", Locale.getDefault())
+
+        return try {
+            val date = inputFormat.parse(input)
+            date?.let { outputFormat.format(it) }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    private fun processForecastData(forecastList: List<ForecastMainDetails>): List<DailyForecast> {
+        val dailyForecasts = mutableMapOf<String, MutableList<ForecastMainDetails>>()
+
+        //groups s the forecast items by day
+        forecastList.forEach { forecastItem ->
+            val dayKey = getDayOfWeekName(forecastItem.date) ?: ""
+            dailyForecasts.getOrPut(dayKey) { mutableListOf() }.add(forecastItem)
+        }
+
+        // Calculate averages and most common icon for each day
+        val dailyForecastData = dailyForecasts.map { (day, forecasts) ->
+            val avgHighTemp = forecasts.maxOf { it.highTemp }
+            val avgLowTemp = forecasts.minOf { it.lowTemp }
+            val avgWindSpeed = forecasts.map { it.wind.speed }.average()
+            val mostCommonIcon = forecasts.groupBy { it.iconImageUrl }
+                .maxByOrNull { (_, items) -> items.size }?.key ?: "no icon?"
+            val mostCommonIconDesc = forecasts.groupBy { it.weatherType }
+                .maxByOrNull { (_, items) -> items.size }?.key ?: "no desc?"
+            val avgWindDeg = forecasts.map { it.wind.degree }.average()
+
+            DailyForecast(
+                day, avgHighTemp, avgLowTemp,
+                mostCommonIcon, mostCommonIconDesc,
+                WindInfo(avgWindSpeed, avgWindDeg.roundToInt())
+            )
+        }
+
+        //return only the first 5 days
+        return dailyForecastData.take(5)
+    }
+
+    private fun convertDateString(forecastList: List<ForecastHomeDetails>): List<ForecastHomeDetails> {
+
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val outputFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
+
+        forecastList.forEach { forecastItem ->
+            val oldDate = forecastItem.date
+            val date = inputFormat.parse(oldDate)
+            forecastItem.date = outputFormat.format(date as Date)
+        }
+
+        return forecastList
     }
 }
