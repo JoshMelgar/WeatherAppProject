@@ -55,12 +55,11 @@ class WeatherViewmodelTest {
 
     @After
     fun tearDown() {
-        // reset the main dispatcher to the original Main dispatcher
         Dispatchers.resetMain()
     }
 
     @Test
-    fun `update location permission status updates internal state`() = runTest {
+    fun update_location_permission_status_updates_internal_state() = runTest {
         // GIVEN the permission status is initially false
         assertThat(weatherViewModel.locationPermissionGranted.value).isFalse()
 
@@ -72,7 +71,7 @@ class WeatherViewmodelTest {
     }
 
     @Test
-    fun `update location with successful data loading updates state to Data`() = runTest {
+    fun update_location_with_successful_data_loading_updates_state_to_Data() = runTest {
         // GIVEN successful responses from all repository calls
         val latitude = 37.4219983
         val longitude = -122.084
@@ -96,7 +95,7 @@ class WeatherViewmodelTest {
     }
 
     @Test
-    fun `update location with repository error updates state to Error`() = runTest {
+    fun update_location_with_repository_error_updates_state_to_Error() = runTest {
         // GIVEN the repository returns an error for geocoding
         coEvery { mockRepository.getGeocoding(any(), any(), any(), any()) } returns Result.Error(Exception("Network error"))
 
