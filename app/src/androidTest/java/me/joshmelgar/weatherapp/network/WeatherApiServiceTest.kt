@@ -9,9 +9,6 @@ import org.junit.Before
 import org.junit.Test
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-import java.nio.file.Paths
 
 class WeatherApiServiceTest {
 
@@ -35,7 +32,7 @@ class WeatherApiServiceTest {
     }
 
     @Test
-    fun `getWeather returns expected data`() = runBlocking {
+    fun getWeather_returns_expected_data() = runBlocking {
         val response = MockResponse()
             .setResponseCode(200)
             .setBody("""
@@ -82,7 +79,7 @@ class WeatherApiServiceTest {
     }
 
     @Test
-    fun `getGeocoding returns expected data`() = runBlocking {
+    fun getGeocoding_returns_expected_data() = runBlocking {
         val response = MockResponse()
             .setResponseCode(200)
             .setBody("[{\"name\":\"Mountain View\",\"local_names\":{\"ar\":\"مونتن فيو\",\"en\":\"Mountain View\",\"zh\":\"山景城\",\"ru\":\"Маунтин-Вью\"},\"lat\":37.3893889,\"lon\":-122.0832101,\"country\":\"US\",\"state\":\"California\"}]")
@@ -101,11 +98,9 @@ class WeatherApiServiceTest {
     }
 
     @Test
-    fun `getForecast returns expected data`() = runBlocking {
+    fun getForecast_returns_expected_data() = runBlocking {
 
-        val url = this.javaClass.classLoader?.getResource("forecast_response.json")
-        val jsonPath = Paths.get(url!!.toURI())
-        val jsonString = String(Files.readAllBytes(jsonPath), StandardCharsets.UTF_8)
+        val jsonString = this.javaClass.classLoader?.getResourceAsStream("forecast_response.json")?.bufferedReader().use { it?.readText() } ?: ""
 
         val response = MockResponse()
             .setResponseCode(200)

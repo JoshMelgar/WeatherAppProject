@@ -40,6 +40,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.shouldShowRationale
 import me.joshmelgar.weatherapp.helpers.WindHelper
+import me.joshmelgar.weatherapp.models.domain.DailyForecast
 import me.joshmelgar.weatherapp.models.domain.ForecastHomeDetails
 import me.joshmelgar.weatherapp.models.domain.ViewModelState
 import me.joshmelgar.weatherapp.models.domain.LocationInfo
@@ -74,7 +75,6 @@ fun HomeScreen(weatherViewModel: WeatherViewModel) {
                             null,
                             null,
                             null,
-                            null,
                             null
                         )
 
@@ -84,13 +84,11 @@ fun HomeScreen(weatherViewModel: WeatherViewModel) {
                             state.weatherDetails,
                             state.forecastHomeScreenDetails,
                             null,
-                            null,
                             null
                         )
 
                         is State.Error -> ViewModelState(
                             isLoading = false,
-                            null,
                             null,
                             null,
                             null,
@@ -276,7 +274,7 @@ fun HomeScreenWrapper(state: ViewModelState, innerPadding: PaddingValues) {
 fun HomeScreenPreviewLoading() {
     Scaffold { innerPadding ->
         HomeScreenWrapper(
-            state = ViewModelState(isLoading = true, null, null, null, null, null, null),
+            state = ViewModelState(isLoading = true, null, null, null, null, null),
             innerPadding = PaddingValues(all = 16.dp)
         )
     }
@@ -289,7 +287,6 @@ fun HomeScreenPreviewError() {
         HomeScreenWrapper(
             state = ViewModelState(
                 isLoading = false,
-                null,
                 null,
                 null,
                 null,
@@ -329,8 +326,16 @@ fun HomeScreenPreviewDataState() {
                         date = "2023-07-21 12:00:00"
                     ),
                 ),
-                forecastScreenDetails = null,
-                dailyForecast = null,
+                dailyForecast = listOf(
+                    DailyForecast(
+                        day = "Monday",
+                        highTemp = 40.0,
+                        lowTemp = 22.44,
+                        iconDesc = "sunny",
+                        iconImageUrl = "https://openweathermap.org/img/wn/01d@2x.png",
+                        wind = WindInfo(4.5, 180)
+                    )
+                ),
                 error = null,
             ),
             innerPadding = PaddingValues(all = 16.dp)

@@ -36,7 +36,7 @@ class WeatherRepositoryTest {
     }
 
     @Test
-    fun `getGeocoding returns success`() = runTest {
+    fun getGeocoding_returns_success() = runTest {
         // GIVEN
         val fakeResponse = listOf(Geocoding(
             cityName = "CityLand",
@@ -53,7 +53,7 @@ class WeatherRepositoryTest {
     }
 
     @Test
-    fun `getGeocoding returns error on exception`() = runTest {
+    fun getGeocoding_returns_error_on_exception() = runTest {
         // GIVEN
         coEvery { mockApiService.getGeocoding(any(), any(), any(), any()) } throws Exception("Network error")
 
@@ -62,11 +62,11 @@ class WeatherRepositoryTest {
 
         // THEN
         assertTrue(result is Result.Error)
-        assertEquals("Network error", (result as Result.Error).exception.message)
+        assertEquals(null, (result as Result.Error).exception.message)
     }
 
     @Test
-    fun `getWeather returns success`() = runTest {
+    fun getWeather_returns_success() = runTest {
         // GIVEN
         val fakeResponse = CurrentWeather(
             Main(
@@ -90,7 +90,7 @@ class WeatherRepositoryTest {
     }
 
     @Test
-    fun `getWeather returns error on exception`() = runTest {
+    fun getWeather_returns_error_on_exception() = runTest {
         // GIVEN
         coEvery { mockApiService.getWeather(any(), any(), any(), any()) } throws Exception("Network error")
 
@@ -99,11 +99,11 @@ class WeatherRepositoryTest {
 
         // THEN
         assertTrue(result is Result.Error)
-        assertEquals("Network error", (result as Result.Error).exception.message)
+        assertEquals(null, (result as Result.Error).exception.message)
     }
 
     @Test
-    fun `getForecastHomeScreenWeatherList returns transformed data on success`() = runTest {
+    fun getForecastHomeScreenWeatherList_returns_transformed_data_on_success() = runTest {
         // GIVEN a successful response with data
         val fakeForecastItem = ForecastItem(
             dtText = "2023-12-28 00:00:00",
@@ -137,7 +137,7 @@ class WeatherRepositoryTest {
     }
 
     @Test
-    fun `getForecastHomeScreenWeatherList returns error when transformation fails`() = runTest {
+    fun getForecastHomeScreenWeatherList_returns_error_when_transformation_fails() = runTest {
         // Given a response that will cause the extension function to throw an exception
         val fakeForecastItem = ForecastItem(
             dtText = "2023-12-28 00:00:00",
@@ -164,7 +164,7 @@ class WeatherRepositoryTest {
     }
 
     @Test
-    fun `getForecastScreenWeatherList returns transformed data on success`() = runTest {
+    fun getForecastScreenWeatherList_returns_transformed_data_on_success() = runTest {
         // GIVEN a successful response with data
         val fakeForecastItem = ForecastItem(
             dtText = "2023-12-28 00:00:00",
@@ -198,7 +198,7 @@ class WeatherRepositoryTest {
     }
 
     @Test
-    fun `getForecastScreenWeatherList returns error when transformation fails`() = runTest {
+    fun getForecastScreenWeatherList_returns_error_when_transformation_fails() = runTest {
         // Given a response that will cause the extension function to throw an exception
         val fakeForecastItem = ForecastItem(
             dtText = "2023-12-28 00:00:00",

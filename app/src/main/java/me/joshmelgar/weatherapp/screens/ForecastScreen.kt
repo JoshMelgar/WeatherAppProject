@@ -36,7 +36,6 @@ import coil.compose.rememberAsyncImagePainter
 import me.joshmelgar.weatherapp.helpers.WindHelper
 import me.joshmelgar.weatherapp.models.domain.WindInfo
 import me.joshmelgar.weatherapp.models.domain.DailyForecast
-import me.joshmelgar.weatherapp.models.domain.ForecastMainDetails
 import me.joshmelgar.weatherapp.models.domain.LocationInfo
 import me.joshmelgar.weatherapp.models.domain.ViewModelState
 import me.joshmelgar.weatherapp.models.domain.WeatherDetails
@@ -66,7 +65,6 @@ fun ForecastScreen(weatherViewModel: WeatherViewModel) {
                             null,
                             null,
                             null,
-                            null,
                             null
                         )
 
@@ -75,14 +73,12 @@ fun ForecastScreen(weatherViewModel: WeatherViewModel) {
                             state.locationInfo,
                             state.weatherDetails,
                             null,
-                            null,
                             state.dailyForecast,
                             null
                         )
 
                         is State.Error -> ViewModelState(
                             isLoading = false,
-                            null,
                             null,
                             null,
                             null,
@@ -232,7 +228,7 @@ fun ForecastScreenWrapper(state: ViewModelState, innerPadding: PaddingValues) {
 fun ForecastScreenPreviewLoading() {
     Scaffold { innerPadding ->
         ForecastScreenWrapper(
-            state = ViewModelState(isLoading = true, null, null, null, null, null, null),
+            state = ViewModelState(isLoading = true, null, null, null, null, null),
             innerPadding = PaddingValues(all = 16.dp)
         )
     }
@@ -245,7 +241,6 @@ fun ForecastScreenPreviewError() {
         ForecastScreenWrapper(
             state = ViewModelState(
                 isLoading = false,
-                null,
                 null,
                 null,
                 null,
@@ -275,16 +270,6 @@ fun ForecastScreenPreviewDataState() {
                     lowTemp = 10.0,
                     highTemp = 77.4,
                     wind = WindInfo(speed = 2.0, degree = 2)
-                ),
-                forecastScreenDetails = listOf(
-                    ForecastMainDetails(
-                        date = "2023-07-21 12:00:00",
-                        highTemp = 100.6,
-                        lowTemp = 95.2,
-                        iconImageUrl = "https://openweathermap.org/img/wn/01d@2x.png",
-                        weatherType = "Sunny",
-                        wind = WindInfo(speed = 9.4, degree = 3)
-                    ),
                 ),
                 forecastHomeScreenDetails = null,
                 dailyForecast = null,

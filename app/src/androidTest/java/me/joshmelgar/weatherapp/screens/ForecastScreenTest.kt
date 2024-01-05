@@ -61,7 +61,6 @@ class ForecastScreenTest {
             null,
             null,
             null,
-            null,
             Exception("Mock Error")
         )
         composeTestRule.setContent {
