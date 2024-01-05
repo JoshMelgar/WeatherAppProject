@@ -22,8 +22,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -36,6 +40,7 @@ import me.joshmelgar.weatherapp.models.domain.ForecastMainDetails
 import me.joshmelgar.weatherapp.models.domain.LocationInfo
 import me.joshmelgar.weatherapp.models.domain.ViewModelState
 import me.joshmelgar.weatherapp.models.domain.WeatherDetails
+import me.joshmelgar.weatherapp.state.State
 import me.joshmelgar.weatherapp.viewmodels.WeatherViewModel
 import kotlin.math.roundToInt
 
@@ -55,7 +60,7 @@ fun ForecastScreen(weatherViewModel: WeatherViewModel) {
                     weatherViewModel.updateLocation()
 
                     val uiState = when (state) {
-                        is WeatherViewModel.State.Loading -> ViewModelState(
+                        is State.Loading -> ViewModelState(
                             isLoading = true,
                             null,
                             null,
@@ -65,17 +70,17 @@ fun ForecastScreen(weatherViewModel: WeatherViewModel) {
                             null
                         )
 
-                        is WeatherViewModel.State.Data -> ViewModelState(
+                        is State.Data -> ViewModelState(
                             isLoading = false,
                             state.locationInfo,
                             state.weatherDetails,
                             null,
-                            state.forecastScreenDetails,
+                            null,
                             state.dailyForecast,
                             null
                         )
 
-                        is WeatherViewModel.State.Error -> ViewModelState(
+                        is State.Error -> ViewModelState(
                             isLoading = false,
                             null,
                             null,
@@ -178,6 +183,7 @@ fun FiveDayForecastColumn(dailyForecasts: List<DailyForecast>) {
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ForecastScreenWrapper(state: ViewModelState, innerPadding: PaddingValues) {
     Surface(
@@ -188,7 +194,11 @@ fun ForecastScreenWrapper(state: ViewModelState, innerPadding: PaddingValues) {
             state.isLoading -> {
                 // Display a loading indicator
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(modifier = Modifier
+                        .semantics {
+                            this.testTagsAsResourceId = true
+                        }
+                        .testTag("ProgressIndicator"))
                 }
             }
 

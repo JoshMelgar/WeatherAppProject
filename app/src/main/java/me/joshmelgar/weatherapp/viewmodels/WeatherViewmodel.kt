@@ -11,10 +11,9 @@ import me.joshmelgar.weatherapp.managers.LocationManager
 import me.joshmelgar.weatherapp.models.domain.DailyForecast
 import me.joshmelgar.weatherapp.models.domain.ForecastHomeDetails
 import me.joshmelgar.weatherapp.models.domain.ForecastMainDetails
-import me.joshmelgar.weatherapp.models.domain.LocationInfo
-import me.joshmelgar.weatherapp.models.domain.WeatherDetails
 import me.joshmelgar.weatherapp.models.domain.WindInfo
 import me.joshmelgar.weatherapp.respositories.WeatherRepository
+import me.joshmelgar.weatherapp.state.State
 import me.joshmelgar.weatherapp.utils.Result
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -33,19 +32,6 @@ class WeatherViewModel @Inject constructor(
 
     fun updateLocationPermissionStatus(granted: Boolean) {
         _locationPermissionGranted.value = granted
-    }
-
-    sealed class State {
-        data object Loading : State()
-
-        data class Error(val error: Exception) : State()
-        data class Data(
-            val locationInfo: LocationInfo,
-            val weatherDetails: WeatherDetails,
-            val forecastHomeScreenDetails: List<ForecastHomeDetails>,
-            val forecastScreenDetails: List<ForecastMainDetails>,
-            val dailyForecast: List<DailyForecast>
-        ) : State()
     }
 
     //initialize initial state as "Loading"
@@ -70,7 +56,6 @@ class WeatherViewModel @Inject constructor(
                         locationInfo = locationResult.data,
                         weatherDetails = weatherResult.data,
                         forecastHomeScreenDetails = convertDateString(forecastHomeResult.data),
-                        forecastScreenDetails = forecastDetailResult.data,
                         dailyForecast = processForecastData(forecastDetailResult.data)
                     )
                 } else {

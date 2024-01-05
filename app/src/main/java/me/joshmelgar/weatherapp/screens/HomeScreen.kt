@@ -26,8 +26,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -41,6 +45,7 @@ import me.joshmelgar.weatherapp.models.domain.ViewModelState
 import me.joshmelgar.weatherapp.models.domain.LocationInfo
 import me.joshmelgar.weatherapp.models.domain.WeatherDetails
 import me.joshmelgar.weatherapp.models.domain.WindInfo
+import me.joshmelgar.weatherapp.state.State
 import me.joshmelgar.weatherapp.viewmodels.WeatherViewModel
 import kotlin.math.roundToInt
 
@@ -63,7 +68,7 @@ fun HomeScreen(weatherViewModel: WeatherViewModel) {
                     weatherViewModel.updateLocation()
 
                     val uiState = when (state) {
-                        is WeatherViewModel.State.Loading -> ViewModelState(
+                        is State.Loading -> ViewModelState(
                             isLoading = true,
                             null,
                             null,
@@ -73,7 +78,7 @@ fun HomeScreen(weatherViewModel: WeatherViewModel) {
                             null
                         )
 
-                        is WeatherViewModel.State.Data -> ViewModelState(
+                        is State.Data -> ViewModelState(
                             isLoading = false,
                             state.locationInfo,
                             state.weatherDetails,
@@ -83,7 +88,7 @@ fun HomeScreen(weatherViewModel: WeatherViewModel) {
                             null
                         )
 
-                        is WeatherViewModel.State.Error -> ViewModelState(
+                        is State.Error -> ViewModelState(
                             isLoading = false,
                             null,
                             null,
@@ -119,6 +124,7 @@ fun HomeScreen(weatherViewModel: WeatherViewModel) {
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ForecastColumn(forecastList: List<ForecastHomeDetails>) {
     val scrollState = rememberScrollState()
@@ -131,6 +137,8 @@ fun ForecastColumn(forecastList: List<ForecastHomeDetails>) {
                     .fillMaxWidth()
                     .padding(3.dp)
                     .background(Color(0xFF008D75))
+                    .semantics { this.testTagsAsResourceId = true }
+                    .testTag("ForecastBox")
             ) {
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -163,6 +171,7 @@ fun ForecastColumn(forecastList: List<ForecastHomeDetails>) {
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun HomeScreenWrapper(state: ViewModelState, innerPadding: PaddingValues) {
     Surface(
@@ -171,14 +180,16 @@ fun HomeScreenWrapper(state: ViewModelState, innerPadding: PaddingValues) {
     ) {
         when {
             state.isLoading -> {
-                // Display a loading indicator
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(modifier = Modifier
+                        .semantics {
+                            this.testTagsAsResourceId = true
+                        }
+                        .testTag("ProgressIndicator"))
                 }
             }
 
             state.error != null -> {
-                // Display an error message
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                     Text("Error: ${state.error.message}", color = Color.Red)
                 }
