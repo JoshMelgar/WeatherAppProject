@@ -18,6 +18,7 @@ import me.joshmelgar.weatherapp.models.domain.ForecastMainDetails
 import me.joshmelgar.weatherapp.models.domain.LocationInfo
 import me.joshmelgar.weatherapp.models.domain.WeatherDetails
 import me.joshmelgar.weatherapp.respositories.WeatherRepository
+import me.joshmelgar.weatherapp.state.State
 import me.joshmelgar.weatherapp.utils.Result
 import org.junit.After
 import org.junit.Before
@@ -91,7 +92,7 @@ class WeatherViewmodelTest {
         weatherViewModel.updateLocation(latitude, longitude)
 
         // THEN the state should be updated to State.Data
-        assertThat(weatherViewModel.state.value).isInstanceOf(WeatherViewModel.State.Data::class.java)
+        assertThat(weatherViewModel.state.value).isInstanceOf(State.Data::class.java)
     }
 
     @Test
@@ -108,7 +109,7 @@ class WeatherViewmodelTest {
         weatherViewModel.updateLocation(1.0, 1.0)
 
         // THEN the state should be updated to State.Error with the appropriate exception
-        val state = weatherViewModel.state.value as WeatherViewModel.State.Error
+        val state = weatherViewModel.state.value as State.Error
         assertThat(state.error).hasMessageThat().contains("Network error")
     }
 }
