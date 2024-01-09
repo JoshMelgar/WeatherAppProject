@@ -17,6 +17,7 @@ import me.joshmelgar.weatherapp.models.domain.ForecastHomeDetails
 import me.joshmelgar.weatherapp.models.domain.ForecastMainDetails
 import me.joshmelgar.weatherapp.models.domain.LocationInfo
 import me.joshmelgar.weatherapp.models.domain.WeatherDetails
+import me.joshmelgar.weatherapp.models.domain.WindInfo
 import me.joshmelgar.weatherapp.respositories.WeatherRepository
 import me.joshmelgar.weatherapp.state.State
 import me.joshmelgar.weatherapp.utils.Result
@@ -111,4 +112,66 @@ class WeatherViewmodelTest {
         val state = weatherViewModel.state.value as State.Error
         assertThat(state.error).hasMessageThat().contains("Network error")
     }
+
+    @Test
+    fun test_forecast_data_is_grouped_by_day() {
+        val forecastList = listOf(
+            mockForecast("Monday", 20.0, 10.0, 5.0, 90, "icon1", "Sunny"),
+            mockForecast("Monday", 22.0, 12.0, 6.0, 100, "icon2", "Cloudy"),
+            mockForecast("Tuesday", 18.0, 8.0, 4.0, 80, "icon3", "Rainy")
+        )
+
+        val result = weatherViewModel.processForecastData(forecastList)
+
+        assertThat(result).hasSize(2)
+        assertThat(result[0].day).isEqualTo("Monday")
+        assertThat(result[1].day).isEqualTo("Tuesday")
+    }
+
+    @Test
+    fun `test correct averages are calculated`() {
+        // Arrange
+        val forecastList = listOf(
+            mockForecast("Monday", 20.0, 10.0, 5.0, 90, "icon1", "Sunny"),
+            mockForecast("Monday", 22.0, 12.0, 6.0, 100, "icon2", "Cloudy")
+        )
+
+        // Act
+        val result = weatherViewModel.processForecastData(forecastList)
+
+        // Assert
+        val mondayForecast = result.find { it.day == "Monday" }
+        assertThat(mondayForecast?.highTemp).isWithin(0.001).of(22.0)
+        assertThat(mondayForecast?.lowTemp).isWithin(0.001).of(10.0)
+        assertThat(mondayForecast?.wind?.speed).isWithin(0.001).of(5.5)
+    }
+
+    @Test
+    fun `test most common icon is selected`() {
+        // Arrange
+        val forecastList = listOf(
+            mockForecast("Monday", 20.0, 10.0, 5.0, 90, "icon1", "Sunny"),
+            mockForecast("Monday", 22.0, 12.0, 6.0, 100, "icon1", "Sunny"),
+            mockForecast("Monday", 18.0, 11.0, 7.0, 110, "icon2", "Cloudy")
+        )
+
+        // Act
+        val result = weatherViewModel.processForecastData(forecastList)
+
+        // Assert
+        val mondayForecast = result.find { it.day == "Monday" }
+        assertThat(mondayForecast?.icon?.iconUrl).isEqualTo("icon1")
+    }
+
+    private fun mockForecast(day: String, highTemp: Double, lowTemp: Double, windSpeed: Double, windDegree: Int, iconUrl: String, weatherType: String): ForecastMainDetails {
+        return ForecastMainDetails(
+            date = "Monday",
+            highTemp = highTemp,
+            lowTemp = lowTemp,
+            wind = WindInfo(windSpeed, windDegree),
+            iconImageUrl = iconUrl,
+            weatherType = weatherType
+        )
+    }
+
 }

@@ -42,6 +42,7 @@ import com.google.accompanist.permissions.shouldShowRationale
 import me.joshmelgar.weatherapp.helpers.WindHelper
 import me.joshmelgar.weatherapp.models.domain.DailyForecast
 import me.joshmelgar.weatherapp.models.domain.ForecastHomeDetails
+import me.joshmelgar.weatherapp.models.domain.IconInfo
 import me.joshmelgar.weatherapp.models.domain.ViewModelState
 import me.joshmelgar.weatherapp.models.domain.LocationInfo
 import me.joshmelgar.weatherapp.models.domain.WeatherDetails
@@ -142,15 +143,17 @@ fun ForecastColumn(forecastList: List<ForecastHomeDetails>) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = item.date,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(16.dp)
-                    )
+                    item.date?.let {
+                        Text(
+                            text = it,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
 
                     Row {
                         Text(
-                            text = "${item.temperature.roundToInt()}° F",
+                            text = "${item.temperature?.roundToInt()}° F",
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(16.dp)
                         )
@@ -177,7 +180,7 @@ fun HomeScreenWrapper(state: ViewModelState, innerPadding: PaddingValues) {
         color = MaterialTheme.colorScheme.background
     ) {
         when {
-            state.isLoading -> {
+            state.isLoading == true -> {
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                     CircularProgressIndicator(modifier = Modifier
                         .semantics {
@@ -210,11 +213,13 @@ fun HomeScreenWrapper(state: ViewModelState, innerPadding: PaddingValues) {
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             state.locationInfo?.let {
-                                Text(
-                                    text = it.cityName,
-                                    fontSize = 25.sp,
-                                    fontWeight = FontWeight.Bold,
-                                )
+                                it.cityName?.let { it1 ->
+                                    Text(
+                                        text = it1,
+                                        fontSize = 25.sp,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                }
                             }
 
                             Text(
@@ -331,8 +336,7 @@ fun HomeScreenPreviewDataState() {
                         day = "Monday",
                         highTemp = 40.0,
                         lowTemp = 22.44,
-                        iconDesc = "sunny",
-                        iconImageUrl = "https://openweathermap.org/img/wn/01d@2x.png",
+                        icon = IconInfo("https://openweathermap.org/img/wn/01d@2x.png", "sunny"),
                         wind = WindInfo(4.5, 180)
                     )
                 ),

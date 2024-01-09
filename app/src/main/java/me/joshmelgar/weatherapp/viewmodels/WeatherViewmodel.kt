@@ -11,6 +11,7 @@ import me.joshmelgar.weatherapp.managers.LocationManager
 import me.joshmelgar.weatherapp.models.domain.DailyForecast
 import me.joshmelgar.weatherapp.models.domain.ForecastHomeDetails
 import me.joshmelgar.weatherapp.models.domain.ForecastMainDetails
+import me.joshmelgar.weatherapp.models.domain.IconInfo
 import me.joshmelgar.weatherapp.models.domain.WindInfo
 import me.joshmelgar.weatherapp.respositories.WeatherRepository
 import me.joshmelgar.weatherapp.state.State
@@ -97,29 +98,27 @@ class WeatherViewModel @Inject constructor(
         }
     }
 
-    private fun processForecastData(forecastList: List<ForecastMainDetails>): List<DailyForecast> {
+    fun processForecastData(forecastList: List<ForecastMainDetails>): List<DailyForecast> {
         val dailyForecasts = mutableMapOf<String, MutableList<ForecastMainDetails>>()
 
         //groups s the forecast items by day
         forecastList.forEach { forecastItem ->
-            val dayKey = getDayOfWeekName(forecastItem.date) ?: ""
+            val dayKey = forecastItem.date?.let { getDayOfWeekName(it) } ?: ""
             dailyForecasts.getOrPut(dayKey) { mutableListOf() }.add(forecastItem)
         }
 
         // Calculate averages and most common icon for each day
         val dailyForecastData = dailyForecasts.map { (day, forecasts) ->
-            val avgHighTemp = forecasts.maxOf { it.highTemp }
-            val avgLowTemp = forecasts.minOf { it.lowTemp }
-            val avgWindSpeed = forecasts.map { it.wind.speed }.average()
-            val mostCommonIcon = forecasts.groupBy { it.iconImageUrl }
-                .maxByOrNull { (_, items) -> items.size }?.key ?: "no icon?"
-            val mostCommonIconDesc = forecasts.groupBy { it.weatherType }
-                .maxByOrNull { (_, items) -> items.size }?.key ?: "no desc?"
-            val avgWindDeg = forecasts.map { it.wind.degree }.average()
+            val highTemp = forecasts.maxOfOrNull { it.highTemp ?: Double.MIN_VALUE }
+            val lowTemp = forecasts.minOfOrNull { it.lowTemp ?: Double.MAX_VALUE }
+            val avgWindSpeed = forecasts.mapNotNull { it.wind?.speed }.average()
+            val mostCommonIconInfo = forecasts.groupBy { Pair(it.iconImageUrl, it.weatherType) }
+                .maxByOrNull { (_, items) -> items.size }?.key ?: Pair("no icon?", "no desc?")
+            val avgWindDeg = forecasts.mapNotNull { it.wind?.degree }.average()
 
             DailyForecast(
-                day, avgHighTemp, avgLowTemp,
-                mostCommonIcon, mostCommonIconDesc,
+                day, highTemp, lowTemp,
+                IconInfo(mostCommonIconInfo.first, mostCommonIconInfo.second),
                 WindInfo(avgWindSpeed, avgWindDeg.roundToInt())
             )
         }
@@ -135,7 +134,7 @@ class WeatherViewModel @Inject constructor(
 
         forecastList.forEach { forecastItem ->
             val oldDate = forecastItem.date
-            val date = inputFormat.parse(oldDate)
+            val date = oldDate?.let { inputFormat.parse(it) }
             forecastItem.date = outputFormat.format(date as Date)
         }
 

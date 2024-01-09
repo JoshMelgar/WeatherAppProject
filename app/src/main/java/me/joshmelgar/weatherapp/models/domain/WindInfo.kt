@@ -1,6 +1,6 @@
 package me.joshmelgar.weatherapp.models.domain
 
 data class WindInfo(
-    val speed: Double,
-    val degree: Int
+    val speed: Double?,
+    val degree: Int?
 )

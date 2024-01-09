@@ -12,8 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -36,6 +36,7 @@ import coil.compose.rememberAsyncImagePainter
 import me.joshmelgar.weatherapp.helpers.WindHelper
 import me.joshmelgar.weatherapp.models.domain.WindInfo
 import me.joshmelgar.weatherapp.models.domain.DailyForecast
+import me.joshmelgar.weatherapp.models.domain.IconInfo
 import me.joshmelgar.weatherapp.models.domain.LocationInfo
 import me.joshmelgar.weatherapp.models.domain.ViewModelState
 import me.joshmelgar.weatherapp.models.domain.WeatherDetails
@@ -95,10 +96,8 @@ fun ForecastScreen(weatherViewModel: WeatherViewModel) {
 
 @Composable
 fun FiveDayForecastColumn(dailyForecasts: List<DailyForecast>) {
-    val scrollState = rememberScrollState()
-
-    Column(modifier = Modifier.verticalScroll(scrollState)) {
-        dailyForecasts.forEach { dailyForecast ->
+    LazyColumn {
+        items(dailyForecasts) { dailyForecast ->
             Box(
                 modifier = Modifier
                     .height(100.dp)
@@ -115,7 +114,7 @@ fun FiveDayForecastColumn(dailyForecasts: List<DailyForecast>) {
                 ) {
                     Column {
                         Text(
-                            text = "Hi Temp: ${dailyForecast.highTemp.roundToInt()}",
+                            text = "Hi Temp: ${dailyForecast.highTemp?.roundToInt()}",
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             modifier = Modifier
@@ -123,7 +122,7 @@ fun FiveDayForecastColumn(dailyForecasts: List<DailyForecast>) {
                         )
 
                         Text(
-                            text = "Low Temp: ${dailyForecast.lowTemp.roundToInt()}",
+                            text = "Low Temp: ${dailyForecast.lowTemp?.roundToInt()}",
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             modifier = Modifier
@@ -134,11 +133,13 @@ fun FiveDayForecastColumn(dailyForecasts: List<DailyForecast>) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(
-                            text = dailyForecast.day,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
-                        )
+                        dailyForecast.day?.let {
+                            Text(
+                                text = it,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
 
                         Text(
                             text = "Wind Speed",
@@ -147,13 +148,13 @@ fun FiveDayForecastColumn(dailyForecasts: List<DailyForecast>) {
                         )
 
                         Text(
-                            text = "${dailyForecast.wind.speed.roundToInt()} mph",
+                            text = "${dailyForecast.wind?.speed?.roundToInt()} mph",
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp
                         )
 
                         Text(
-                            text = WindHelper().getWindDirection(dailyForecast.wind.degree),
+                            text = WindHelper().getWindDirection(dailyForecast.wind?.degree),
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp
                         )
@@ -163,15 +164,17 @@ fun FiveDayForecastColumn(dailyForecasts: List<DailyForecast>) {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Image(
-                            painter = rememberAsyncImagePainter(dailyForecast.iconImageUrl),
+                            painter = rememberAsyncImagePainter(dailyForecast.icon?.iconUrl),
                             contentDescription = "Weather Icon",
                             modifier = Modifier.size(48.dp)
                         )
 
-                        Text(
-                            text = dailyForecast.iconDesc,
-                            fontWeight = FontWeight.Bold
-                        )
+                        dailyForecast.icon?.iconDesc?.let {
+                            Text(
+                                text = it,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
@@ -187,7 +190,7 @@ fun ForecastScreenWrapper(state: ViewModelState, innerPadding: PaddingValues) {
         color = MaterialTheme.colorScheme.background
     ) {
         when {
-            state.isLoading -> {
+            state.isLoading == true -> {
                 // Display a loading indicator
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                     CircularProgressIndicator(modifier = Modifier
@@ -288,8 +291,7 @@ fun FiveDayForecastColumnPreview() {
             day = "Monday",
             highTemp = 80.4,
             lowTemp = 10.2,
-            iconImageUrl = "https://openweathermap.org/img/wn/01d@2x.png",
-            iconDesc = "snow",
+            icon = IconInfo("https://openweathermap.org/img/wn/01d@2x.png", "snow"),
             wind = WindInfo(10.4, 4)
         )
     )

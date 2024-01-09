@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import me.joshmelgar.weatherapp.models.domain.DailyForecast
+import me.joshmelgar.weatherapp.models.domain.IconInfo
 import me.joshmelgar.weatherapp.models.domain.ViewModelState
 import me.joshmelgar.weatherapp.models.domain.WindInfo
 
@@ -38,8 +39,7 @@ class ForecastScreenTest {
                 day = "Monday",
                 highTemp = 80.4,
                 lowTemp = 10.2,
-                iconImageUrl = "https://openweathermap.org/img/wn/01d@2x.png",
-                iconDesc = "snow",
+                icon = IconInfo("https://openweathermap.org/img/wn/01d@2x.png", "sunny"),
                 wind = WindInfo(10.4, 4)
             )
         )
